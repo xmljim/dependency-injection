@@ -1,0 +1,143 @@
+package io.github.xmljim.service.di.scanner;
+
+import io.github.xmljim.service.di.ServiceManagerException;
+import io.github.xmljim.service.di.util.ClassFilter;
+import io.github.xmljim.service.di.util.ClassFilters;
+
+import java.lang.reflect.Constructor;
+import java.util.Optional;
+
+/**
+ * Abstract Scanner implementation designed for extension
+ */
+public abstract class Scanners implements Scanner {
+    private final ClassFilter serviceClassFilter;
+    private final ClassFilter providerClassFilter;
+    private boolean enforceProviderAssignableFromService;
+
+    public static final String MODULE = "ModuleScanner";
+    public static final String CLASSPATH = "ClasspathScanner";
+
+    /**
+     * Constructor
+     * @param serviceClassFilter  The service class filter
+     * @param providerClassFilter the provider class filter
+     */
+    public Scanners(ClassFilter serviceClassFilter, ClassFilter providerClassFilter) {
+        this.serviceClassFilter = serviceClassFilter;
+        this.providerClassFilter = providerClassFilter;
+    }
+
+    /**
+     * Constructor
+     * @param serviceClassFilter                   the service class filter
+     * @param providerClassFilter                  the provider class filter
+     * @param enforceProviderAssignableFromService apply assignability enforcement between service and provider
+     */
+    public Scanners(ClassFilter serviceClassFilter, ClassFilter providerClassFilter, boolean enforceProviderAssignableFromService) {
+        this(serviceClassFilter, providerClassFilter);
+        this.enforceProviderAssignableFromService = enforceProviderAssignableFromService;
+    }
+
+    /**
+     * Create a default module scanner
+     * @param serviceClassFilter                   the service class filter
+     * @param providerClassFilter                  the provider class filter
+     * @param enforceProviderAssignableFromService apply assignability enforcement between service and provider
+     * @return a new module scanner
+     */
+    public static Scanner newModuleScanner(ClassFilter serviceClassFilter, ClassFilter providerClassFilter,
+        boolean enforceProviderAssignableFromService) {
+
+        return newScanner(ModuleScanner.class, serviceClassFilter, providerClassFilter, enforceProviderAssignableFromService);
+    }
+
+    /**
+     * Create a default classpath scanner
+     * @param serviceClassFilter                   the service class filter
+     * @param providerClassFilter                  the provider class filter
+     * @param enforceProviderAssignableFromService apply assignability enforcement between service and provider
+     * @return a new classpath scanner
+     */
+    public static Scanner newClasspathScanner(ClassFilter serviceClassFilter, ClassFilter providerClassFilter,
+        boolean enforceProviderAssignableFromService) {
+
+        return newScanner(ClasspathScanner.class, serviceClassFilter, providerClassFilter, enforceProviderAssignableFromService);
+    }
+
+    /**
+     * Create a new scanner
+     * @param scannerClass                         The scanner class to create. Must extend/implement the
+     *                                             {@link Scanner} interface
+     * @param serviceClassFilter                   the service class filter
+     * @param providerClassFilter                  the provider class filter
+     * @param enforceProviderAssignableFromService apply assignability enforcement between service and provider
+     * @param <S>                                  The scanner type
+     * @return a new scanner
+     */
+    public static <S extends Scanner> S newScanner(Class<S> scannerClass, ClassFilter serviceClassFilter,
+        ClassFilter providerClassFilter, boolean enforceProviderAssignableFromService) {
+        try {
+            Constructor<S> ctor = scannerClass.getDeclaredConstructor(ClassFilter.class, ClassFilter.class, boolean.class);
+            return ctor.newInstance(serviceClassFilter, providerClassFilter, enforceProviderAssignableFromService);
+        } catch (Exception e) {
+            throw new ServiceManagerException(e.getMessage(), e);
+        }
+    }
+
+    public static <S extends Scanner> S newScanner(Class<S> scannerClass) {
+        return newScanner(scannerClass, ClassFilters.DEFAULT, ClassFilters.DEFAULT, false);
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <S extends Scanner> Class<S> getModuleScannerClass() {
+        return (Class<S>) ModuleScanner.class;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <S extends Scanner> Class<S> getClasspathScannerClass() {
+        return (Class<S>) ClasspathScanner.class;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ClassFilter getServiceClassFilter() {
+        return serviceClassFilter;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ClassFilter getProviderClassFilter() {
+        return providerClassFilter;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean enforceProviderAssignableFromService() {
+        return enforceProviderAssignableFromService;
+    }
+
+    /**
+     * Load a class from a class name
+     * @param className the class name
+     * @return the class
+     */
+    protected synchronized Optional<Class<?>> loadClass(String className) {
+        try {
+            return Optional.of(Class.forName(className));
+        } catch (NoClassDefFoundError | Exception e) {
+            return Optional.empty();
+            //since we're loading services, there may be cases, particularly with
+            //META-INF/services declaration where the service may not be on the classpath
+            //As a result, we'll return an Optional.empty() indicating no class was found
+            //and let the upstream method determine how to handle this
+            //throw new ServiceManagerException("Class not found: " + className + ": " + e.getMessage(), e);
+        }
+    }
+}
