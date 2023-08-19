@@ -21,16 +21,16 @@ com.example.provides.MyServiceProviderImpl
 Using the `java.util.ServiceLoader`, you could access the service provider using the Service class:
 
 ```java
-ServiceLoader<MyService> serviceLoader=ServiceLoader.load(MyService.class);
+ServiceLoader<MyService> serviceLoader = ServiceLoader.load(MyService.class);
 
-    Iterator<MyService> myServiceIterator=serviceLoader.iterator();
+    Iterator<MyService> myServiceIterator = serviceLoader.iterator();
 
-    if(myServiceIterator.hasNext()){
-    var myService=myServiceIterator.next();
-    //do something with the service...
-    myService.doSomething();
-    }else{
-    //handle cases where a provider is not found
+    if (myServiceIterator.hasNext()) {
+        var myService = myServiceIterator.next();
+        //do something with the service...
+        myService.doSomething();
+    } else {
+        //handle cases where a provider is not found
     }
 
 ```
@@ -72,7 +72,6 @@ public class MyServiceProviderImpl {
 
     //default zero-arg constructor required by the Java SPI
     public MyServiceProviderImpl() {
-
         ServiceLoader<MyOtherService> otherService = ServiceLoader.load(MyOtherService.class);
         this.otherService = otherService.next(); //I'm cheating here...
     }
@@ -136,7 +135,8 @@ RegistryBootstrap.load();
 Now we can access all services using the `ServiceRegistry`:
 
 ```java
-var serviceRegistry=ServiceRegistries.getInstance();
-    var myService=serviceRegistry.loadServiceProvider(MyService.class);
+    var serviceRegistry = ServiceRegistries.getInstance();
+    var myService = serviceRegistry.loadServiceProvider(MyService.class);
 ```
+
 
