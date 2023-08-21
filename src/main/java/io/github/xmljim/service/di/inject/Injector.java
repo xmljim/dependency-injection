@@ -1,0 +1,54 @@
+package io.github.xmljim.service.di.inject;
+
+public interface Injector {
+
+    /**
+     * Create a new class instance.
+     * <p>
+     * Will interrogate the class' constructors, giving priority to
+     * a constructor decorated with the {@link io.github.xmljim.service.di.annotations.DependencyInjection}
+     * annotation, or to a constructor with all parameters that have a service registered, or
+     * a zero-argument constructor.
+     * </p>
+     * <p>
+     * If the constructor contains parameters (i.e., injectable services), instances of these
+     * services are created and used as the parameter values when invoking the constructor.
+     * </p>
+     * <p>
+     * Once the instance is created, it will interrogate the class' any annotated field with the
+     * {@link io.github.xmljim.service.di.annotations.Inject} annotation and retrieves the
+     * service instance values for each.
+     * </p>
+     * @param instanceClass the instance class to create
+     * @param <T>
+     * @return A new class instance
+     */
+    <T> T createInstance(Class<T> instanceClass);
+
+
+    /**
+     * Create a new class instance containing a mixture of injectable services and "static" parameter values.
+     * <p>
+     * <strong>IMPORTANT:</strong> The constructor <em>must have</em> a
+     * {@link io.github.xmljim.service.di.annotations.DependencyInjection}
+     * annotation.
+     * </p>
+     * <p>
+     * The constructor's parameters must follow the following rules
+     * </p>
+     * <ol>
+     *     <li>All injectable parameters must appear in sequence from the beginning of the parameter list</li>
+     *     <li>All other "static" arguments must follow injectable parameters</li>
+     * </ol>
+     * <p>
+     *     Parameter values are supplied by first interrogating the parameter's type. If the parameter can be
+     *     supplied from a registered service, an instance of that service is created. If no service is found
+     *     each argument is taken from the supplied arguments in order.
+     * </p>
+     * @param instanceClass The instance class to create
+     * @param args          Any number of "static" parameter values
+     * @param <T>           The instance type
+     * @return a new class instance
+     */
+    <T> T createInstanceWithArgs(Class<T> instanceClass, Object... args);
+}

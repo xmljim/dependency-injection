@@ -10,9 +10,7 @@ import io.github.xmljim.service.di.service.Services;
 import io.github.xmljim.service.di.util.ClassFilter;
 import io.github.xmljim.service.di.util.ClassFilters;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -34,6 +32,13 @@ public class RegistryBootstrap {
 
         var serviceRegistry = ServiceRegistries.newServiceRegistry(options.getEnforceAssignability());
         options.getScanners().forEach(serviceRegistry::appendScanner);
+
+        options.getServiceDefinitions().forEach(sd -> {
+            Service service = Services.newService(sd.serviceClass(), serviceRegistry);
+            Provider provider = Providers.newProvider(service, sd.providerClass());
+            service.appendProvider(provider);
+            serviceRegistry.appendService(service);
+        });
 
         if (options.getLoadRegistry()) {
             serviceRegistry.load(options.getServiceClassFilter().orElse(ClassFilters.DEFAULT),
@@ -88,6 +93,7 @@ public class RegistryBootstrap {
         private ClassFilter providerClassFilter;
         private boolean enforceAssignability = false;
         private boolean loadRegistry = true;
+        private final Set<ServiceDefinition<?, ?>> serviceDefinitions = new HashSet<>();
 
         /**
          * Private constructor. Not intended for general use
@@ -233,6 +239,19 @@ public class RegistryBootstrap {
         }
 
         /**
+         * Return service definitions that will be added at bootstrap
+         * @return a set of service definitions
+         */
+        public Set<ServiceDefinition<?, ?>> getServiceDefinitions() {
+            return serviceDefinitions;
+        }
+
+        private void appendServiceDefinition(ServiceDefinition<?, ?> serviceDefinition) {
+            serviceDefinitions.add(serviceDefinition);
+        }
+
+
+        /**
          * Options Builder implementation. Can only be accessed from {@link Options#configure()}
          */
         public static class Builder {
@@ -374,14 +393,49 @@ public class RegistryBootstrap {
             }
 
             /**
+             * Append a service
+             * @param serviceClass  the service class
+             * @param providerClass the provider class
+             * @param <S>           The service class type
+             * @param <P>           the provider class type
+             * @return The builder
+             */
+            public <S extends Class<?>, P extends Class<?>> Builder appendService(S serviceClass, P providerClass) {
+                options.appendServiceDefinition(new ServiceDefinition<>(serviceClass, providerClass));
+                return this;
+            }
+
+            /**
              * Build the options
              * @return a new Options instance
              */
             public Options build() {
+                if (options.getEnforceAssignability()) {
+                    @SuppressWarnings("unchecked")
+                    var doesNotComply = options.getServiceDefinitions().stream()
+                        .filter(serviceDefinition -> !serviceDefinition.serviceClass().isAssignableFrom(serviceDefinition.providerClass()))
+                        .map(ServiceDefinition::serviceClass)
+                        .map(Class::toString)
+                        .toList();
+                    if (!doesNotComply.isEmpty()) {
+                        throw new ServiceManagerException("Service classes must be assignable from provider classes. Offending services: %s",
+                            String.join(", ", doesNotComply));
+                    }
+                }
+
                 return options;
             }
+
+
         }
 
+        /**
+         * Internal class holding manually declared services to be appended to the service registry
+         * @param <S>
+         * @param <P>
+         */
+        public record ServiceDefinition<S extends Class<?>, P extends Class<?>>(S serviceClass, P providerClass) {
+        }
     }
 
 

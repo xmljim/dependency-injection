@@ -1,3 +1,5 @@
+import io.github.xmljim.service.di.inject.Injector;
+import io.github.xmljim.service.di.inject.InjectorImpl;
 import io.github.xmljim.service.di.registry.ServiceRegistry;
 import io.github.xmljim.service.di.registry.ServiceRegistryImpl;
 
@@ -16,6 +18,8 @@ module xmljim.dependency.injection {
     exports io.github.xmljim.service.di.service;
     exports io.github.xmljim.service.di.annotations;
     exports io.github.xmljim.service.di.util;
+    exports io.github.xmljim.service.di.inject;
 
     provides ServiceRegistry with ServiceRegistryImpl;
+    provides Injector with InjectorImpl;
 }

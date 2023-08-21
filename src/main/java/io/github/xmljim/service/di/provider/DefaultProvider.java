@@ -1,11 +1,8 @@
 package io.github.xmljim.service.di.provider;
 
 import io.github.xmljim.service.di.ServiceManagerException;
-import io.github.xmljim.service.di.annotations.DependencyInjection;
 import io.github.xmljim.service.di.annotations.Generated;
-import io.github.xmljim.service.di.annotations.Inject;
 import io.github.xmljim.service.di.annotations.ServiceProvider;
-import io.github.xmljim.service.di.registry.ServiceRegistry;
 import io.github.xmljim.service.di.service.Service;
 import io.github.xmljim.service.di.util.ServiceLifetime;
 import org.slf4j.Logger;
@@ -13,9 +10,11 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.List;
+
+import static io.github.xmljim.service.di.internal.ClassUtils.findConstructor;
+import static io.github.xmljim.service.di.internal.ClassUtils.getParameterValues;
+import static io.github.xmljim.service.di.internal.ClassUtils.injectFields;
 
 /**
  * {@inheritDoc}
@@ -62,6 +61,7 @@ class DefaultProvider extends Providers {
     @Override
     @SuppressWarnings({"unchecked", "unused"})
     public <T> T getInstance() {
+        //note: can't use Injector service due to infinite recursion
         //return the instance if one was saved previously (i.e., ServiceLifetime == SINGLETON)
         if (instance != null) {
             LOGGER.debug("Provider class cached. Returning existing instance");
@@ -69,12 +69,12 @@ class DefaultProvider extends Providers {
         }
 
         //locate the constructor to use on the provider
-        Constructor<?> constructor = getConstructor();
+        Constructor<?> constructor = findConstructor(getProviderClass(), getService().getServiceRegistry());
 
         LOGGER.debug("Constructor to create new provider instance: {}", constructor);
 
         //initialize parameter values to be used for creating the new class instance (e.g., dependency injection)
-        List<?> parameterValues = getParameterValues(constructor);
+        List<?> parameterValues = getParameterValues(constructor, getService().getServiceRegistry());
 
         try {
             //create the instance.
@@ -88,115 +88,11 @@ class DefaultProvider extends Providers {
             }
 
             //now find any fields that might want dependency injection
-            return injectFields(instance);
+            return injectFields(getService().getServiceRegistry(), instance);
 
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new ServiceManagerException(e.getMessage(), e);
         }
-
-
-    }
-
-    /**
-     * After the provider has been instantiated, look for any fields on the class instance that
-     * have been decorated with the {@link Inject} annotation. For each of these, create/get an instance of that
-     * service and assign it to the field
-     * @param instance The current service provider instance
-     * @param <T>      The service provider type
-     * @return the current service provider instance with all requested dependency injected fields assigned
-     */
-    private <T> T injectFields(T instance) {
-        //var fields = instance.getClass().getDeclaredFields();
-
-        Arrays.stream(instance.getClass().getDeclaredFields()).filter(field -> field.isAnnotationPresent(Inject.class))
-            .forEach(field -> {
-                LOGGER.debug("Injecting service into field: {}", field.getName());
-                var inject = field.getAnnotation(Inject.class);
-
-                var fieldInstance = inject.providerName().isEmpty() ? loadServiceInstance(field.getType()) :
-                    loadServiceInstance(field.getType(), inject.providerName());
-                try {
-                    field.trySetAccessible();
-                    field.set(instance, fieldInstance);
-                } catch (IllegalAccessException e) {
-                    throwError(e.getMessage(), e);
-                }
-            });
-        return instance;
-    }
-
-    /**
-     * Find a constructor on the provider class to use for creating a new instance. Priority is given to
-     * any constructor with the {@link DependencyInjection} annotation (which will be required if the
-     * constructor includes any arguments). Note: all arguments must reference a registered service.
-     * @return The constructor that will be used to create the provider instance
-     */
-    private Constructor<?> getConstructor() {
-        List<Constructor<?>> allConstructors = Arrays.stream(getProviderClass().getConstructors()).toList();
-
-        var validConstructors = allConstructors.stream()
-            .filter(ctor -> isInjectable(ctor.getParameterTypes()))
-            .filter(ctor -> Modifier.isPublic(ctor.getModifiers())).toList();
-
-        var diConstructor = validConstructors.stream().filter(ctor -> ctor.getAnnotation(DependencyInjection.class) != null)
-            .findFirst();
-
-        LOGGER.debug("Pick constructor to create new provider instance: {}", diConstructor);
-
-        return diConstructor.orElse(validConstructors.stream().findFirst().orElseThrow(() -> serviceError("No valid constructor found")));
-    }
-
-    /**
-     * Internal utility for loading additional services required for this provider
-     * @param serviceType The service type
-     * @param <T>         the service instance type
-     * @return a service instance
-     */
-    @SuppressWarnings("unchecked")
-    private <T> T loadServiceInstance(Class<?> serviceType) {
-        return ServiceRegistry.class.isAssignableFrom(serviceType) ? (T) getService().getServiceRegistry()
-            : getService().getServiceRegistry().loadServiceProvider(serviceType);
-
-    }
-
-    /**
-     * Internal utility for loading additional services required for this provider, using the name for the
-     * additional service's provider
-     * @param serviceType The service type
-     * @param name        the provider name
-     * @param <T>         The service instance type
-     * @return The service instance
-     */
-    @SuppressWarnings("unchecked")
-    private <T> T loadServiceInstance(Class<?> serviceType, String name) {
-        return ServiceRegistry.class.isAssignableFrom(serviceType) ? (T) getService().getServiceRegistry()
-            : getService().getServiceRegistry().loadServiceProvider(serviceType, name);
-    }
-
-    /**
-     * Using a constructor, iterate through each parameter, initialize a service instance as the parameter
-     * value.
-     * @param constructor The constructor to interrogate
-     * @param <P>         The provider constructor type
-     * @return A list containing parameter values mapped to service instance for each parameter
-     */
-    private <P> List<?> getParameterValues(Constructor<P> constructor) {
-        LOGGER.debug("Inject constructor parameter values: {}", constructor);
-        return Arrays.stream(constructor.getParameters())
-            .map(param -> param.isAnnotationPresent(ServiceProvider.class) ?
-                loadServiceInstance(param.getType(), param.getAnnotation(ServiceProvider.class).name()) :
-                loadServiceInstance(param.getType()))
-            .toList();
-    }
-
-    /**
-     * Used when trying to locate a "valid" constructor to create a provider instance. A "valid" constructor
-     * contains either zero arguments, or all arguments reference a registered service.
-     * @param parameterClass a varargs array of parameter types for a given constructor
-     * @return {@code true} if no arguments exist, or all argument types reference a registered service
-     */
-    private synchronized boolean isInjectable(Class<?>... parameterClass) {
-        return parameterClass.length == 0 || Arrays.stream(parameterClass).allMatch(c -> getService().getServiceRegistry().hasService(c));
     }
 
     /**

@@ -1,6 +1,8 @@
 package io.github.xmljim.service.di.test;
 
+import io.github.xmljim.service.di.RegistryBootstrap;
 import io.github.xmljim.service.di.ServiceManager;
+import io.github.xmljim.service.di.registry.ServiceRegistries;
 import io.github.xmljim.service.di.testclasses.*;
 import io.github.xmljim.service.di.util.ClassFilters;
 import org.junit.jupiter.api.*;
@@ -105,9 +107,9 @@ public class ServiceManagerTests {
     @DisplayName("Given a service manager, a loadService is called, should return a service provider that includes " +
         "injected services")
     void testInjectedService() {
-        ServiceManager.newInstance();
-        ServiceManager.load();
-        IInjectedServiceA injectedService = ServiceManager.loadService(IInjectedServiceA.class);
+        RegistryBootstrap.load();
+        var serviceRegistry = ServiceRegistries.getInstance();
+        IInjectedServiceA injectedService = serviceRegistry.loadServiceProvider(IInjectedServiceA.class);
         assertNotNull(injectedService);
         assertTrue(injectedService.getInjected());
         System.out.println(injectedService.saySomething());

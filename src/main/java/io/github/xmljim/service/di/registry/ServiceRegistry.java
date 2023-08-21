@@ -1,5 +1,6 @@
 package io.github.xmljim.service.di.registry;
 
+import io.github.xmljim.service.di.inject.Injector;
 import io.github.xmljim.service.di.scanner.Scanner;
 import io.github.xmljim.service.di.service.Service;
 import io.github.xmljim.service.di.util.ClassFilter;
@@ -181,6 +182,61 @@ public interface ServiceRegistry {
      * @return a Set of provider instances for a given service
      */
     <S, T> Set<T> loadAllServiceProviders(Class<S> serviceClass);
+
+    /**
+     * Create a new instance of a class
+     * <p>The class must have a constructor that has either no arguments or one where all arguments are "injectable"</p>
+     * <p>If the class contains more than one constructor, the preferred constructor should have a
+     * {@link io.github.xmljim.service.di.annotations.DependencyInjection} annotation</p>
+     * @param classToLoad The class to load
+     * @param <T>         The class type
+     * @return a new class instance, with any injected services instantiated.
+     */
+    default <T> T loadClass(Class<T> classToLoad) {
+        Injector injector = loadServiceProvider(Injector.class);
+        return injector.createInstance(classToLoad);
+    }
+
+    /**
+     * Load a class using a constructor containing zero or more injectable services and zero or more non-injectable
+     * parameters.
+     * <p><strong>IMPORTANT:</strong> The desired constrctor <em>must</em> have a
+     * {@link io.github.xmljim.service.di.annotations.DependencyInjection} annotation.</p>
+     * <p>
+     * All injectable service parameters must appear before all non-injectable parameters
+     * </p>
+     * <p>Example:</p>
+     * <p>Assume a class, {@code MyExampleClass} uses two services, {@code MyService1} and {@code MyService2}. It
+     * also requires a String and boolean parameter using the constructor:</p>
+     * <pre>
+     *
+     *    {@literal @}DependencyInjection
+     *     public MyExampleClass(MyService1 myService1, MyService2, String name, boolean test) {
+     *         ...
+     *     }
+     * </pre>
+     * <p>
+     * The invocation would be:
+     * </p>
+     * <pre>
+     *     var serviceRegistry = ServiceRegistries.getInstance();
+     *     MyExampleClass exampleClass = serviceRegistry.loadClass(MyExampleClass.class, "test", true);
+     * </pre>
+     * <p>
+     * Notice that the {@code MyService1} and {@code MyService2} parameters are not included with the
+     * {@code loadClass} parameters. This is because the constructor's arguments will be interrogated in sequence.
+     * If the parameter type has a registered service, it will be resolved from the service registry. Otherwise
+     * the parameter value will be taken from the additional args provided in order.
+     * </p>
+     * @param classToLoad The class to load
+     * @param args        any non-injectable arguments
+     * @param <T>         The class type to create
+     * @return a new class instance
+     */
+    default <T> T loadClass(Class<T> classToLoad, Object... args) {
+        Injector injector = loadServiceProvider(Injector.class);
+        return injector.createInstanceWithArgs(classToLoad, args);
+    }
 
     /**
      * Enforce assignability between the service and provider classes. While this does not actually

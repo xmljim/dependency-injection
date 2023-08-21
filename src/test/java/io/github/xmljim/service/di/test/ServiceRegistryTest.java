@@ -9,10 +9,7 @@ import io.github.xmljim.service.di.util.ClassFilters;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ServiceRegistryTest {
 
@@ -138,6 +135,62 @@ class ServiceRegistryTest {
         assertTrue(providers.stream().anyMatch(provider -> provider.getClass().equals(TestServiceA.class)));
         assertTrue(providers.stream().anyMatch(provider -> provider.getClass().equals(TestServiceNamedA.class)));
         assertTrue(providers.stream().anyMatch(provider -> provider.getClass().equals(TestServiceNamedB.class)));
+    }
+
+    @Test
+    public void testLoadClassInjectedNoArgs() {
+        var serviceRegistry = ServiceRegistries.newServiceRegistry();
+        serviceRegistry.load();
+
+        MyExampleClassNoArgs exampleClass = serviceRegistry.loadClass(MyExampleClassNoArgs.class);
+        assertNotNull(exampleClass);
+        assertNotNull(exampleClass.getTeapotService());
+        assertEquals("I'm a little teapot", exampleClass.getTeapotService().teapot());
+    }
+
+    @Test
+    public void testLoadClassInjectedWithArgs() {
+        var serviceRegistry = ServiceRegistries.newServiceRegistry();
+        serviceRegistry.load();
+        String name = "Test";
+        int repeat = 2;
+
+        MyExampleClassArgs exampleClassArgs = serviceRegistry.loadClass(MyExampleClassArgs.class, name, repeat);
+        assertNotNull(exampleClassArgs);
+        assertNotNull(exampleClassArgs.getTeapotService());
+        assertEquals("I'm a little teapot", exampleClassArgs.getTeapotService().teapot());
+
+        var builder = new StringBuilder();
+        for (int i = 0; i < repeat; i++) {
+            builder.append(name).append(System.lineSeparator());
+        }
+
+        assertEquals(builder.toString(), exampleClassArgs.echoName());
+    }
+
+    @Test
+    public void testLoadClassInjectedWithArgsExceptionMissingArg() {
+        var serviceRegistry = ServiceRegistries.newServiceRegistry();
+        serviceRegistry.load();
+        String name = "Test";
+
+        var exception = assertThrows(ServiceManagerException.class,
+            () -> serviceRegistry.loadClass(MyExampleClassArgs.class, name));
+
+        assertTrue(exception.getMessage().startsWith("No argument value provided for arg"));
+    }
+
+    @Test
+    public void testLoadClassInjectedWithArgsExceptionWrongType() {
+        var serviceRegistry = ServiceRegistries.newServiceRegistry();
+        serviceRegistry.load();
+        String name = "Test";
+        int repeat = 5;
+
+        var exception = assertThrows(ServiceManagerException.class,
+            () -> serviceRegistry.loadClass(MyExampleClassArgs.class, repeat, name));
+
+        assertEquals("argument type mismatch", exception.getMessage());
     }
 
 }
