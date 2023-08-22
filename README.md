@@ -37,11 +37,13 @@ shared with other services at creation time. This library scratches these itches
       * [`Scanners` Class](#scanners-class)
       * [`ClassFilter` Interface](#classfilter-interface)
       * [Custom Scanners](#custom-scanners)
+      * [Appending a Scanner](#appending-a-scanner)
       * [Creating a Scanner Instance](#creating-a-scanner-instance)
       * [Running a Scanner](#running-a-scanner)
     * [`Service`](#service)
     * [`Provider`](#provider)
     * [`RegistryBootstrap`](#registrybootstrap)
+      * [`RegistryBootstrap.Options`](#registrybootstrapoptions)
 <!-- TOC -->
 
 ## Some History and Context
@@ -635,8 +637,22 @@ ClassFilter filter = ClassFilter.hasAnnotation(MyAnnotation.class).and(ClassFilt
 All scanners must implement the `Scanner` interface. However, it's advisable to extend the `Scanners` abstract class
 which provides default implementation for the `getProviderFilter()`, `getServiceFilter()`, and 
 `enableProviderAssignableFromService()` methods. As a result, a custom scanner needs to only implement the `getName()`
-and `scan(ServiceRegistry)` methods. The `scan` method is the principle operation that discovers and registers services
-to a service registry.
+and `scan(ServiceRegistry)` methods. The `scan` method is the principle operation that must be implemented to discover
+and registers services to a service registry.
+
+#### Appending a Scanner
+
+Since scanner configurations (filters and assignability) can be modified for each scan, appending a scanner to 
+a service registry stores the key-value pair of the scanner's name and the scanner class. When a new load or reload
+is requested, a new scanner instance is created with the requested configuration.
+
+```java
+var serviceRegistry = ServiceRegistries.getInstance();
+serviceRegistry.appendScanner("MyScanner", MyScanner.class);
+```
+
+Since it was just appended, you can use `getScanners()` to list all registered scanners, or `isLoaded(String)`
+to get the load status for that scanner.
 
 #### Creating a Scanner Instance
 
@@ -661,9 +677,84 @@ The `ServiceRegistry` provides several methods for invoking any or all scanners:
   scanner registration (via `ServiceRegistry.appendScanner(String, Class<? extends Scanner>)`)
 
 
-
 ### `Service`
+
+A `Service` contains the service class reference and manages all corresponding `Provider` class references. In addition,
+a `Service` controls the assignability enforcement for all provider classes. When a service is requested, the 
+`Service` is responsible for locating the `Provider` class to use to fulfill the request.  For more information about
+provider selection strategies, see [The `@ServiceProvider` Annotation](#the-serviceprovider-annotation)
 
 ### `Provider`
 
+A `Provider` contains a reference to a service provider class and is responsible for creating instances of the class. 
+When a `Service` selects a `Provider` for a service request, it will call `getInstance()`.  This method creates
+an instance of the provider class, with all services injected. The `Provider` also uses the `@ServiceProvider`
+to determine the scope of the provider.  If the `@ServiceProvider.lifetime()` is equal to `ServiceLifetime.SINGLETON`,
+it is responsible for holding a reference to the instance and returning it via `getInstance()` when requested.
+
 ### `RegistryBootstrap`
+
+The `RegistryBoostrap` provides static methods for configuring and loading a `ServiceRegistry` instance. It is intended
+to be integrated into other libraries and applications as a mechanism for configuring a service registry instance.
+
+
+#### `RegistryBootstrap.Options`
+
+Stores all configuration options to be used to create a new `ServiceRegistry` instance. Using a bootstrap pattern
+allows for initialization of the ServiceRegistry when the JVM is started.  For example, assume a standard Java 
+entry point `main(String[] args)` method:
+
+```java
+
+public static void main(String[] args) {
+    // uses the default options and loads a service registry
+    RegistryBootstrap.load();    
+    
+    // now the service registry can be accessed:
+    var serviceRegistry = ServiceRegistries.getInstance();
+    
+}
+
+```
+
+In this example, we'll use the `RegistryBootstrap.Options.configure()` to set options:
+
+```java
+public static void main(String[] args) {
+    RegistryBootstrap.load(() -> RegistryBootstrap.Options.configure()
+    	.enforceAssignability(true) //enforce assignability in the service registry
+    	.appendScanner("MyPrimaryScanner", MyScannerPrimary.class) 
+    	.appendScanner("MySecondaryScanner", MySecondaryScanner.class) //you can register more than one
+    	.appendService(MyService.class, MyServiceImpl.class) 
+    	.serviceClassFilter(ClassFilters.implementsInterface(MyServiceBase.class))
+    	.providerClassFilter(ClassFilters.hasServiceProviderAnnotation())
+    	.loadRegistry(false);
+    );
+}
+```
+
+`RegistryBootstrap.Options` provides three static methods for instantiating a `Options` instance:
+
+- `useDefaults()` - returns a new `Options` instance using default option settings.
+- `configure()` - opens a Builder instance that is used to set options. Returns an `Options` instance when
+  `Builder.build()` is called
+- `merge(Options)` - provides an integration point for libraries that integrate with the Service Manager to initialize
+  options required for their library's functionality and to expose any additional configuration options for other
+  libraries as needed.
+
+
+The following options are available from the `configure()` and `merge(Options)` methods:
+
+| Option                          | Type                               | Description                                                                                                                                                                                     |
+|---------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `serviceImplementation`         | `Class<? extends Service>`         | Specifies the implementation class for service classes. If not set, the default implementation is used                                                                                          |
+| `providerImplementation`        | `Class<? extends Provider>`        | Specifies the implementation class for provider classes. If not set, the default implementation is used                                                                                         |
+| `serviceRegistryImplementation` | `Class<? extends ServiceRegistry>` | Specifies the implementation class the service registry. If not set, the default implementation is used                                                                                         |
+| `enforceAssignability`          | `boolean`                          | Allows you to specify if all service provider classes must be assignable from the service class during load. By default, this is set to `false`                                                 |
+| `serviceClassFilter`            | `ClassFilter`                      | Specifies a class filter to apply for loading services. If not set, it will use the default filter (`ClassFilters.DEFAULT`) (load all). Only applied if `loadRegistry` is set to `true`         |
+| `providerClassFilter`           | `ClassFilter`                      | Specifies a class filter to apply for loading provider classes. If not set, it will use the default filter (`ClassFilters.DEFAULT`) (load all). Only applied if `loadRegistry` is set to `true` |
+| Custom Scanners                 | `Class<? extends Scanner>`         | Using the `appendScanner(String, Class<? extends Scanner>)` method, it will add a new scanner to the service registry when it's initialized                                                     |
+| Custom Services                 | `ServiceDefinition`                | Using the `appendService(S, P)` method, services can be bootstrapped into the service registry rather than discovered                                                                           |
+| `loadRegistry`                  | `boolean`                          | Load the registry uisng all defined scanners and filters after initialization. Set to `true` by default. If set to `false`, the service registry will be intialized without loading services    |
+
+     
