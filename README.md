@@ -28,6 +28,20 @@ shared with other services at creation time. This library scratches these itches
       * [Selecting a Provider by Priority](#selecting-a-provider-by-priority)
     * [Service Scope/Lifetime](#service-scopelifetime)
     * [Injecting Services into Service Providers](#injecting-services-into-service-providers)
+  * [Service Dependency Design](#service-dependency-design)
+    * [`ServiceRegistry`](#serviceregistry)
+      * [ServiceRegistries Class](#serviceregistries-class)
+      * [Assignability Enforcement](#assignability-enforcement)
+      * [Default Implementation](#default-implementation)
+    * [`Scanner`](#scanner)
+      * [`Scanners` Class](#scanners-class)
+      * [`ClassFilter` Interface](#classfilter-interface)
+      * [Custom Scanners](#custom-scanners)
+      * [Creating a Scanner Instance](#creating-a-scanner-instance)
+      * [Running a Scanner](#running-a-scanner)
+    * [`Service`](#service)
+    * [`Provider`](#provider)
+    * [`RegistryBootstrap`](#registrybootstrap)
 <!-- TOC -->
 
 ## Some History and Context
@@ -391,6 +405,11 @@ The `@ServiceProvider` annotation is used to identify service provider classes. 
 as a service provider, the annotation provides some additional metadata to assist in choosing a provider as well
 as dictating the _scope_ or _lifetime_ of the provider.
 
+> **NOTE**
+> 
+> The `@ServiceProvider` annotation is not required for out-of-the-box discovery. However, service providers with
+> this annotation are given preference over other providers.
+
 The `@ServiceProvider` has three properties:
 
 | Property     | Type                   | Description                                                                 |
@@ -514,11 +533,134 @@ System.out.println(injectedService.saySomething());
 //emits "I'm a little teapot"
 ```
 
-## Service Dependency Components
+## Service Dependency Design
+
+The native `java.util.ServiceLoader` was implemented around the assumption that services will be lazily loaded
+on demand.  It also follows the standard Java SPI framework assumptions around creating service provider instances
+using a default or zero-argument constructor. While the `ServiceLoader` does do a small amount of caching for 
+services previous requested, it has no global knowledge of any services other than at request time.  In other words,
+it has to interrogate the classpath or module path for each service.  For most applications, the latency is negligible.
+However, this approach does not lend itself well to creating complex services that have dependencies on other services.
+
+The Service Dependency design assumes that it should _front-load_ discovery of services at startup and storing them
+in a `ServiceRegistry` using `Scanner` classes to discover and load the services.  
+
+When a service is requested, the `ServiceRegistry` will locate the `Service`, which in turn will select a `Provider` 
+to return an instance of the requested service.
+
+The `RegistryBootstrap` provides a mechanism for configuring and loading the `ServiceRegistry` at startup. It's also
+designed in a way for other libraries who wish to use this library to integrate configuration options during
+initialization. 
 
 ### `ServiceRegistry`
 
+At the heart of the entire design is the `ServiceRegistry`.  This interface provides methods for configuring,
+loading services, retrieving services and creating class instances with injected services. It is intended to be 
+loaded once and shared as a singleton instance. In addition to storing services, the `ServiceRegistry` manages
+all of the `Scanner` instances that are used for `load` and `reload` operations.
+
+#### ServiceRegistries Class
+
+The `ServiceRegistries` class is an abstract implementation that provides utility methods as well as the static
+`getInstance()` method which allows the `ServiceRegistry` to be treated as a singleton instance.  Additionally,
+this class contains static methods for creating custom `ServiceRegistry` implementations.  The built-in, out-of-the-box
+`ServiceRegistry` implementation extends from this class.
+
+#### Assignability Enforcement
+
+As mentioned previously, the general convention is that a service is _assignable from_ a service provider. In other
+words, a service provider instance _inherits from_ or _implements_ a service class.  Out of the box, there is no
+presumption that this should be enforced. However, depending on the application you may have a requirement that
+this requirement should be enforced.  In that event, you can initialize a `ServiceRegistry` to propagate this requirement
+all the way down to each `Provider` instance at discovery time.  While the `ServiceRegistry` does not actually
+enforce this requirement, it as a global configuration that services and providers _may_ recognize (as we'll see later,
+these can be overridden at the `Service` level, or even by individual `Scanner` implementations).
+
+This can be set at instantiation time using the `ServiceRegistries.newServiceRegistry(boolean)` method, or 
+from the `RegistryBootstrap.Options` class at startup.
+
+#### Default Implementation
+
+The default implementation uses in-memory storage for holding references to each discovered `Service`. This implementation
+initializes two default `Scanner` classes to discover services via the classpath and module path. 
+
 ### `Scanner`
+
+`Scanner` implementations are designed for discovery of services, mapping providers to these services, and adding
+these discovered services to the `ServiceRegistry`.  The `ServiceRegistry` orchestrates when each of these scanner 
+implementations will run along with additional configurations including filtering and applying assignability enforcement.
+
+There are two out-of-the-box `Scanner` implementations, which can be accessed from the `Scanners` class. All scanner 
+implementations must have a unique name which allows a `ServiceRegistry` to each loaded scanner individually.
+
+- Classpath Scanner (name: `Scanners.MODULE`): Scans for all services declared in `META-INF/services` resources.
+- Module Scanner: (name: `Scanners.CLASSPATH`): Scans all loaded modules' module descriptor for `provides` declarations
+
+#### `Scanners` Class
+
+The `Scanners` class is an abstract implementation of the `Scanner` interface that includes some utility methods 
+that can be shared across scanners as additional properties for configuring a scan operation including assignability
+enforcement, and service and provider class filtering.  Additionally, the class provides static methods for creating
+new custom and out-of-the-box scanner instances.
+
+It provides default implementations for the following methods:
+
+- `enforceProviderAssignableFromService()`: returns a boolean value indicating whether the provider should enforce
+   assignability with the service class
+- `getProviderClassFilter()`: returns a `ClassFilter` to filter provider classes against specific criteria
+- `getServiceClassFilter()`: returns a `ClassFilter` to filter service classes against specific criteria
+
+#### `ClassFilter` Interface
+
+A `ClassFilter` is an extension of the `Predicate<Class<?>>` functional interface that provides filtering functionality
+for scanners.  Filtering allows the scanner to process services and providers that meet specific criteria to 
+be registered in the `ServiceRegistry`.  There are few built in `ClassFilter` instances available from the `ClassFilters`
+class:
+
+- `ClassFilters.DEFAULT`:  The default filter, returns true for all service or provider classes. In others, don't filter anything
+- `ClassFilters.hasAnnotation(Class<? extends Annotation>)`: Looks for classes that have a specific annotation class
+- `ClassFilters.hasServiceProviderAnnotation()`: Syntactic sugar for `hasAnnotation(ServiceProvider.class)`. Mostly used for provider filters
+- `ClassFilters.implementsInterface(Class<?>)`: Filter for classes that implement a given interface class.
+
+You can also create composite filters using the `and(ClassFilter)`, `or(ClassFilter)` and `not(ClassFilter)` predicate
+functions.  For example, you might have service classes that all implement a base interface _and_ have an annotation
+assigned:
+
+```java 
+ClassFilter filter = ClassFilter.hasAnnotation(MyAnnotation.class).and(ClassFilter.implementsInterface(MyInterface.class));
+```
+
+#### Custom Scanners
+
+All scanners must implement the `Scanner` interface. However, it's advisable to extend the `Scanners` abstract class
+which provides default implementation for the `getProviderFilter()`, `getServiceFilter()`, and 
+`enableProviderAssignableFromService()` methods. As a result, a custom scanner needs to only implement the `getName()`
+and `scan(ServiceRegistry)` methods. The `scan` method is the principle operation that discovers and registers services
+to a service registry.
+
+#### Creating a Scanner Instance
+
+The `Scanners` class contains several static methods to create a new `Scanner` instance:
+
+- `newScanner(Class<? extends Scanner>)`: Creates a scanner instance with default service and provider filters, and
+  inherits the assignability enforcement flag from the service registry.
+- `newScanner(Class<? extends Scanner>, ClassFilter, ClassFilter, boolean)`: Creates a scanner instance using the 
+  specified class, service and provider filters, and assignability enforcement
+
+#### Running a Scanner
+
+The `ServiceRegistry` provides several methods for invoking any or all scanners:
+
+- `load()` - loads all registered scanners on the service registry. This is the equivalent of 
+  `load(ClassFilters.DEFAULT, ClassFilters.DEFAULT)`
+- `load(ClassFilter, ClassFilter)` - loads all registered scanners using the specified service and provider class filters.
+- `load(String, ClassFilter, ClassFilter, boolean)`: runs the registered named scanner using the specified
+  service and provider class filters, and a flag for enforcing assignability (potentially overriding the value 
+  assigned to the registry on instantiation);
+- `load(Scanner)` - runs any scanner (registered or not). This is useful for one-time ad-hoc loads that don't require
+  scanner registration (via `ServiceRegistry.appendScanner(String, Class<? extends Scanner>)`)
+
+
 
 ### `Service`
 
