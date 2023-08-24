@@ -1,5 +1,6 @@
 package io.github.xmljim.service.di.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.xmljim.service.di.annotations.Generated;
 import io.github.xmljim.service.di.provider.Provider;
 import io.github.xmljim.service.di.registry.ServiceRegistry;
@@ -101,6 +102,7 @@ public abstract class Services implements Service {
     /**
      * {@inheritDoc}
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     @Override
     public ServiceRegistry getServiceRegistry() {
         return serviceRegistry;

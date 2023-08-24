@@ -1,5 +1,6 @@
 package io.github.xmljim.service.di.registry;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.xmljim.service.di.ServiceManagerException;
 import io.github.xmljim.service.di.annotations.Generated;
 import io.github.xmljim.service.di.provider.Provider;
@@ -60,8 +61,9 @@ public abstract class ServiceRegistries implements ServiceRegistry {
     public static <S extends ServiceRegistry> S newServiceRegistry(Class<S> serviceRegistryClass) {
         try {
             Constructor<S> ctor = serviceRegistryClass.getConstructor();
-            instance = ctor.newInstance();
-            return (S) instance;
+            var result = ctor.newInstance();
+            instance = result;
+            return result;
         } catch (Exception e) {
             //should never get here
             throw new ServiceManagerException(e.getMessage(), e);
@@ -81,6 +83,7 @@ public abstract class ServiceRegistries implements ServiceRegistry {
         return useServiceRegistry == null ? DEFAULT : useServiceRegistry;
     }
 
+    @SuppressFBWarnings("MS_EXPOSE_REP")
     public static ServiceRegistry getInstance() {
         return instance;
     }

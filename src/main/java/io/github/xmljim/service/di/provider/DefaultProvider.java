@@ -106,17 +106,6 @@ class DefaultProvider extends Providers {
     }
 
     /**
-     * Utility for generating errors
-     * @param message   the error message
-     * @param throwable The underlying exception that caused this error
-     * @return an exception instance
-     */
-    @Generated
-    private ServiceManagerException serviceError(String message, Throwable throwable) {
-        return new ServiceManagerException(message, throwable);
-    }
-
-    /**
      * Throw an error
      * @param message the error message
      */
@@ -124,16 +113,6 @@ class DefaultProvider extends Providers {
     @Generated
     private void throwError(String message) {
         throw serviceError(message);
-    }
-
-    /**
-     * Throw an error
-     * @param message   the error message
-     * @param throwable The underlying exception that caused this error
-     */
-    @Generated
-    private void throwError(String message, Throwable throwable) {
-        throw serviceError(message, throwable);
     }
 
 

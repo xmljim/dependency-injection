@@ -1,5 +1,6 @@
 package io.github.xmljim.service.di.scanner;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.xmljim.service.di.ServiceManagerException;
 import io.github.xmljim.service.di.provider.Provider;
 import io.github.xmljim.service.di.provider.Providers;
@@ -100,6 +101,7 @@ class ClasspathScanner extends Scanners {
      * @param path            The META-INF/services folder
      * @param serviceRegistry The service registry which will hold the services
      */
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     private void traverseAndLoadServiceDirectory(Path path, ServiceRegistry serviceRegistry) {
         try (Stream<Path> servicePath = Files.walk(path)) {
             servicePath.filter(Files::isRegularFile).forEach(serviceFile -> {

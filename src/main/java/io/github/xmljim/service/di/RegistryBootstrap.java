@@ -1,5 +1,6 @@
 package io.github.xmljim.service.di;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.xmljim.service.di.provider.Provider;
 import io.github.xmljim.service.di.provider.Providers;
 import io.github.xmljim.service.di.registry.ServiceRegistries;
@@ -11,7 +12,6 @@ import io.github.xmljim.service.di.util.ClassFilter;
 import io.github.xmljim.service.di.util.ClassFilters;
 
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -225,6 +225,7 @@ public class RegistryBootstrap {
          * @return A map contain a collection of scanner names and scanner classes to be appended to the
          *     {@link ServiceRegistry}
          */
+        @SuppressFBWarnings("EI_EXPOSE_REP")
         public Map<String, Class<? extends Scanner>> getScanners() {
             return this.scannerMap;
         }
@@ -242,6 +243,7 @@ public class RegistryBootstrap {
          * Return service definitions that will be added at bootstrap
          * @return a set of service definitions
          */
+        @SuppressFBWarnings("EI_EXPOSE_REP")
         public Set<ServiceDefinition<?, ?>> getServiceDefinitions() {
             return serviceDefinitions;
         }
@@ -355,9 +357,6 @@ public class RegistryBootstrap {
                         options.setProviderClassFilter(providerClassFilter);
                     } else {
                         if (!options.getProviderClassFilter().get().equals(ClassFilters.DEFAULT)) {
-                            Predicate<Class<?>> original = options.getProviderClassFilter().get();
-                            Predicate<Class<?>> composed = original.or(providerClassFilter);
-
                             options.setProviderClassFilter(options.getProviderClassFilter().orElseThrow(() -> new RuntimeException("bad"))
                                 .or(providerClassFilter));
                         }
@@ -409,6 +408,7 @@ public class RegistryBootstrap {
              * Build the options
              * @return a new Options instance
              */
+            @SuppressFBWarnings("EI_EXPOSE_REP")
             public Options build() {
                 if (options.getEnforceAssignability()) {
                     @SuppressWarnings("unchecked")

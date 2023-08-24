@@ -10,6 +10,7 @@ module xmljim.dependency.injection {
     requires ch.qos.logback.classic;
     requires ch.qos.logback.core;
     requires org.slf4j;
+    requires com.github.spotbugs.annotations;
 
     exports io.github.xmljim.service.di;
     exports io.github.xmljim.service.di.scanner;

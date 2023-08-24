@@ -1,5 +1,6 @@
 package io.github.xmljim.service.di.provider;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.github.xmljim.service.di.ServiceManagerException;
 import io.github.xmljim.service.di.annotations.Generated;
 import io.github.xmljim.service.di.service.Service;
@@ -66,6 +67,7 @@ public abstract class Providers implements Provider {
      * @param service       the service that holds this provider
      * @param providerClass the provider class
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Providers(Service service, Class<?> providerClass) {
         this.service = service;
         this.providerClass = providerClass;
@@ -98,6 +100,7 @@ public abstract class Providers implements Provider {
     /**
      * {@inheritDoc}
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP")
     @Override
     public Service getService() {
         return service;
