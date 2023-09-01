@@ -32,7 +32,7 @@ import java.util.Set;
  * The default ServiceRegistry implementation
  */
 @SuppressWarnings("unused")
-@ServiceProvider(name = "DefaultServiceRegistry", lifetime = ServiceLifetime.SINGLETON, priority = 1)
+@ServiceProvider(name = "DefaultServiceRegistry", lifetime = ServiceLifetime.SINGLETON)
 public class ServiceRegistryImpl extends ServiceRegistries {
     private boolean loaded;
 
@@ -40,6 +40,9 @@ public class ServiceRegistryImpl extends ServiceRegistries {
 
     private final Map<String, Boolean> scannerLoadStatus = new HashMap<>();
 
+    /**
+     * Constructor
+     */
     public ServiceRegistryImpl() {
         super();
         scannerMap.put(Scanners.MODULE, Scanners.getModuleScannerClass());
@@ -67,8 +70,8 @@ public class ServiceRegistryImpl extends ServiceRegistries {
      */
     @Override
     public synchronized void load(ClassFilter serviceFilter, ClassFilter providerFilter) {
-        scannerMap.entrySet().forEach(scanner -> scannerLoadStatus.put(scanner.getKey(),
-            Scanners.newScanner(scanner.getValue(), serviceFilter, providerFilter, enforceProviderAssignableFromService())
+        scannerMap.forEach((key, value) -> scannerLoadStatus.put(key,
+            Scanners.newScanner(value, serviceFilter, providerFilter, enforceProviderAssignableFromService())
                 .scan(this)));
 
         loaded = scannerLoadStatus.values().stream().allMatch(b -> b);

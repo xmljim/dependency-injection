@@ -31,7 +31,14 @@ public abstract class Scanners implements Scanner {
     private final ClassFilter providerClassFilter;
     private boolean enforceProviderAssignableFromService;
 
+    /**
+     * The module scanner name
+     */
     public static final String MODULE = "ModuleScanner";
+
+    /**
+     * The classpath scanner name
+     */
     public static final String CLASSPATH = "ClasspathScanner";
 
     /**
@@ -101,15 +108,31 @@ public abstract class Scanners implements Scanner {
         }
     }
 
+    /**
+     * Create a new scanner
+     * @param scannerClass the scanner class to create
+     * @param <S>          the scanner type
+     * @return a new scanner
+     */
     public static <S extends Scanner> S newScanner(Class<S> scannerClass) {
         return newScanner(scannerClass, ClassFilters.DEFAULT, ClassFilters.DEFAULT, false);
     }
 
+    /**
+     * Utility method for returning the module scanner class
+     * @param <S> The scanner class type
+     * @return The module scanner class
+     */
     @SuppressWarnings("unchecked")
     public static <S extends Scanner> Class<S> getModuleScannerClass() {
         return (Class<S>) ModuleScanner.class;
     }
 
+    /**
+     * Utility method for returning the classpath scanner class
+     * @param <S> the scanner class type
+     * @return the classpath scanner class
+     */
     @SuppressWarnings("unchecked")
     public static <S extends Scanner> Class<S> getClasspathScannerClass() {
         return (Class<S>) ClasspathScanner.class;

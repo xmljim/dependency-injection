@@ -54,6 +54,7 @@ public interface Service {
      * from the {@link ServiceProvider#name()} value (if it is not empty). Otherwise the name will be the fully
      * qualified classname;
      * </p>
+     * @param name the provider name
      * @return An optional containing the provider if one exists, otherwise it will return {@link Optional#empty()}
      */
     Optional<Provider> getProvider(String name);

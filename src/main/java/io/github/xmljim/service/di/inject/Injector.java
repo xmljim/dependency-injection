@@ -16,6 +16,9 @@
 
 package io.github.xmljim.service.di.inject;
 
+/**
+ * Service class for dependency injection
+ */
 public interface Injector {
 
     /**
@@ -36,7 +39,7 @@ public interface Injector {
      * service instance values for each.
      * </p>
      * @param instanceClass the instance class to create
-     * @param <T>
+     * @param <T>           The instance class type
      * @return A new class instance
      */
     <T> T createInstance(Class<T> instanceClass);

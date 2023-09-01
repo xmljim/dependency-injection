@@ -107,6 +107,12 @@ public interface ServiceRegistry {
      */
     void appendScanner(Scanner scanner);
 
+    /**
+     * Append a scanner
+     * @param name         the scanner name
+     * @param scannerClass the scanner class
+     * @param <S>          the scanner class type
+     */
     <S extends Scanner> void appendScanner(String name, Class<S> scannerClass);
 
     /**
@@ -195,6 +201,7 @@ public interface ServiceRegistry {
      * Create a set of all service providers for a given service
      * @param serviceClass the service class
      * @param <S>          The service type
+     * @param <T>          The provider type
      * @return a Set of provider instances for a given service
      */
     <S, T> Set<T> loadAllServiceProviders(Class<S> serviceClass);

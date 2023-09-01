@@ -35,22 +35,35 @@ import static io.github.xmljim.service.di.internal.ClassUtils.findConstructor;
 import static io.github.xmljim.service.di.internal.ClassUtils.getParameterValues;
 import static io.github.xmljim.service.di.internal.ClassUtils.injectFields;
 
-@ServiceProvider(name = "Injector", lifetime = ServiceLifetime.SINGLETON, priority = 1)
+/**
+ * Injector Implementation
+ */
+@ServiceProvider(name = "Injector", lifetime = ServiceLifetime.SINGLETON)
 public class InjectorImpl implements Injector {
     private static final Logger LOGGER = LoggerFactory.getLogger(InjectorImpl.class);
     private final ServiceRegistry serviceRegistry;
 
+    /**
+     * Constructor
+     */
     @Generated
     public InjectorImpl() {
         //no-op
         throw new ServiceManagerException("Cannot instantiate default zero-argument constructor due to dependency");
     }
 
+    /**
+     * Constructor
+     * @param serviceRegistry the service registry
+     */
     @DependencyInjection
     public InjectorImpl(ServiceRegistry serviceRegistry) {
         this.serviceRegistry = serviceRegistry;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <T> T createInstance(Class<T> instanceClass) {
         //locate the constructor to use on the provider
@@ -74,6 +87,9 @@ public class InjectorImpl implements Injector {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public <T> T createInstanceWithArgs(Class<T> instanceClass, Object... args) {
         @SuppressWarnings("unchecked")
         Constructor<T> constructor = (Constructor<T>) Arrays.stream(instanceClass.getConstructors())

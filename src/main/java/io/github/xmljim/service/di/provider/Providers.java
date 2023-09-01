@@ -70,6 +70,10 @@ public abstract class Providers implements Provider {
         }
     }
 
+    /**
+     * Statically set the Provider class type
+     * @param provider the provider class type
+     */
     public static void setUseProviderClass(Class<? extends Provider> provider) {
         useProvider = provider;
     }

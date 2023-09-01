@@ -73,7 +73,6 @@ public abstract class ServiceRegistries implements ServiceRegistry {
      * @param <S>                  The service registry type
      * @return a new ServiceRegistry
      */
-    @SuppressWarnings("unchecked")
     public static <S extends ServiceRegistry> S newServiceRegistry(Class<S> serviceRegistryClass) {
         try {
             Constructor<S> ctor = serviceRegistryClass.getConstructor();
@@ -86,11 +85,13 @@ public abstract class ServiceRegistries implements ServiceRegistry {
         }
     }
 
-    @Generated
+
     /**
      * Provided for {@link io.github.xmljim.service.di.RegistryBootstrap} to inject a registry
      * class
+     * @param serviceRegistry the service registry class
      */
+    @Generated
     public static void setUseServiceRegistry(Class<? extends ServiceRegistry> serviceRegistry) {
         useServiceRegistry = serviceRegistry;
     }
@@ -99,11 +100,18 @@ public abstract class ServiceRegistries implements ServiceRegistry {
         return useServiceRegistry == null ? DEFAULT : useServiceRegistry;
     }
 
+    /**
+     * Get the instance
+     * @return the instance
+     */
     @SuppressFBWarnings("MS_EXPOSE_REP")
     public static ServiceRegistry getInstance() {
         return instance;
     }
 
+    /**
+     * Clear the registry
+     */
     public static void clear() {
         instance = null;
         setUseServiceRegistry(null);

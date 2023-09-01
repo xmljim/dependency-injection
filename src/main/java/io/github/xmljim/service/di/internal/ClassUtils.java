@@ -28,9 +28,23 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
 import java.util.*;
 
+/**
+ * Utility class for initializing dependency injected classed
+ */
 public class ClassUtils {
+    private ClassUtils() {
+        //private no-op
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ClassUtils.class);
 
+    /**
+     * find the appropriate constructor
+     * @param thisClass       this class
+     * @param serviceRegistry service registry
+     * @param <T>             the constructor type
+     * @return a constructor
+     */
     @SuppressWarnings("unchecked")
     public static <T> Constructor<T> findConstructor(Class<?> thisClass, ServiceRegistry serviceRegistry) {
         List<Constructor<?>> allConstructors = Arrays.stream(thisClass.getConstructors()).toList();
@@ -48,6 +62,12 @@ public class ClassUtils {
             .orElseThrow(() -> new ServiceManagerException("No valid constructor found")));
     }
 
+    /**
+     * evaluates if any of the parameters are registered services that can be injected
+     * @param serviceRegistry the service registry
+     * @param parameterClass  the parameter class
+     * @return true if the class can be injected
+     */
     public static boolean isInjectable(ServiceRegistry serviceRegistry, Class<?>... parameterClass) {
         return parameterClass.length == 0 || Arrays.stream(parameterClass).allMatch(serviceRegistry::hasService);
     }
@@ -69,8 +89,9 @@ public class ClassUtils {
      * After the instance has been instantiated, look for any fields on the class instance that
      * have been decorated with the {@link Inject} annotation. For each of these, create/get an instance of that
      * service and assign it to the field
-     * @param instance The current service provider instance
-     * @param <T>      The service provider type
+     * @param serviceRegistry The service registry
+     * @param instance        The current service provider instance
+     * @param <T>             The service provider type
      * @return the current service provider instance with all requested dependency injected fields assigned
      */
     public static <T> T injectFields(ServiceRegistry serviceRegistry, T instance) {
@@ -110,8 +131,9 @@ public class ClassUtils {
     /**
      * Using a constructor, iterate through each parameter, initialize a service instance as the parameter
      * value.
-     * @param constructor The constructor to interrogate
-     * @param <P>         The provider constructor type
+     * @param constructor     The constructor to interrogate
+     * @param serviceRegistry the service registry
+     * @param <P>             The provider constructor type
      * @return A list containing parameter values mapped to service instance for each parameter
      */
     public static <P> List<?> getParameterValues(Constructor<P> constructor, ServiceRegistry serviceRegistry) {
@@ -123,6 +145,14 @@ public class ClassUtils {
             .toList();
     }
 
+    /**
+     * Return parameter values
+     * @param constructor     constructor
+     * @param otherArgs       other arguments
+     * @param serviceRegistry service registry
+     * @param <P>             the constructor type
+     * @return a list of parameter values instantiated from services
+     */
     public static <P> List<Object> getParameterValues(Constructor<P> constructor, Deque<Object> otherArgs, ServiceRegistry serviceRegistry) {
         List<Object> paramValues = new ArrayList<>();
 

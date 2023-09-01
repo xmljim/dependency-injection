@@ -47,6 +47,7 @@ public abstract class Services implements Service {
      * @param serviceClass    the service class
      * @param serviceRegistry the service registry
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public Services(Class<?> serviceClass, ServiceRegistry serviceRegistry) {
         this.serviceClass = serviceClass;
         this.serviceRegistry = serviceRegistry;
@@ -65,6 +66,10 @@ public abstract class Services implements Service {
         setEnforceAssignableFrom(enforceAssignableFrom);
     }
 
+    /**
+     * Statically set the class that will be used for services
+     * @param serviceClass the service class
+     */
     public static void setUseServiceClass(Class<? extends Service> serviceClass) {
         useService = serviceClass;
     }
@@ -95,6 +100,15 @@ public abstract class Services implements Service {
         return newService(getUseService(), serviceClass, serviceRegistry, enforceAssignableFrom);
     }
 
+    /**
+     * Create a new service instance
+     * @param serviceImpl           The service implementation class
+     * @param serviceClass          the service class
+     * @param serviceRegistry       the service registry
+     * @param enforceAssignableFrom enforce assignability
+     * @param <S>                   the service implementation class type
+     * @return a new service
+     */
     public static <S extends Service> Service newService(Class<S> serviceImpl, Class<?> serviceClass, ServiceRegistry serviceRegistry,
         boolean enforceAssignableFrom) {
 

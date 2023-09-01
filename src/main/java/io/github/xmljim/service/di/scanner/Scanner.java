@@ -27,6 +27,10 @@ import java.util.function.Predicate;
 @SuppressWarnings({"unused", "SameReturnValue"})
 public interface Scanner {
 
+    /**
+     * The scanner name
+     * @return the scanner name
+     */
     String getName();
 
     /**

@@ -77,14 +77,7 @@
  *         to design applications that take advantage of service providers that are of a different type.
  *     </li>
  * </ul>
- * <p>
- *     No services are registered until the {@link io.github.xmljim.service.di.ServiceManager#load()} or
- *     {@link io.github.xmljim.service.di.ServiceManager#load(ClassFilter, ClassFilter)}
- *     method is called. Once the registry is populated, subsequent calls to {@link io.github.xmljim.service.di.ServiceManager#loadService(Class)}
- *     or {@link io.github.xmljim.service.di.ServiceManager#loadService(Class, String)} will create service instances
- * </p>
  */
 
 package io.github.xmljim.service.di;
 
-import io.github.xmljim.service.di.util.ClassFilter;

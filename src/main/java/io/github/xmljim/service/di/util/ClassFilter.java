@@ -26,20 +26,38 @@ import java.util.function.Predicate;
 @FunctionalInterface
 public interface ClassFilter extends Predicate<Class<?>> {
 
+    /**
+     * Composes a Class filter joined with another filter using OR logic
+     * @param classFilter The class filter to join
+     * @return the composed class filter
+     */
     default ClassFilter or(ClassFilter classFilter) {
         Objects.requireNonNull(classFilter);
         return (t) -> test(t) || classFilter.test(t);
     }
 
+    /**
+     * Composes a Class filter joined with another filter using AND logic
+     * @param classFilter The class filter to join
+     * @return the composed class filter
+     */
     default ClassFilter and(ClassFilter classFilter) {
         Objects.requireNonNull(classFilter);
         return (t) -> test(t) || classFilter.test(t);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     default ClassFilter negate() {
         return (t) -> !test(t);
     }
 
+    /**
+     * Creates a class filter that is a logical negation of this filter
+     * @param classFilter the class filter
+     * @return the new class filter
+     */
     default ClassFilter not(ClassFilter classFilter) {
         Objects.requireNonNull(classFilter);
         return classFilter.negate();

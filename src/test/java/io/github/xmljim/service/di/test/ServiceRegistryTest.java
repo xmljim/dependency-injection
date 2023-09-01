@@ -46,7 +46,7 @@ class ServiceRegistryTest {
 
     @Test
     @DisplayName("Given a loaded service registry, can reload with all services")
-    void reload() {
+    void testReload() {
 
         var serviceRegistry = ServiceRegistries.newServiceRegistry();
         serviceRegistry.load(ClassFilters.implementsInterface(MyTestServices.class), ClassFilters.hasServiceProviderAnnotation());

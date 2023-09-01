@@ -34,6 +34,11 @@ import java.util.function.Supplier;
  * Bootstraps a Service Registry using the configured {@link Options}
  */
 public class RegistryBootstrap {
+
+    private RegistryBootstrap() {
+        //private no-op
+    }
+
     /**
      * Bootstrap the ServiceRegistry with the provided {@link Options}
      * @param optionsSupplier The Options to supply to the boostrap
@@ -120,7 +125,7 @@ public class RegistryBootstrap {
 
         /**
          * Return the default options
-         * @return
+         * @return a default Options instance
          */
         public static Options useDefaults() {
             return new Options();
@@ -228,7 +233,7 @@ public class RegistryBootstrap {
         /**
          * Return whether to enforce assignability between service and provider classes. This will be applied
          * to the {@link ServiceRegistry}, meaning that it will percolate to the {@link Provider} from each
-         * {@link Scanner}. This is set to {@link false} by default.
+         * {@link Scanner}. This is set to {@code false} by default.
          * @return The flag for enforcing assignability
          */
         public boolean getEnforceAssignability() {
@@ -427,7 +432,6 @@ public class RegistryBootstrap {
             @SuppressFBWarnings("EI_EXPOSE_REP")
             public Options build() {
                 if (options.getEnforceAssignability()) {
-                    @SuppressWarnings("unchecked")
                     var doesNotComply = options.getServiceDefinitions().stream()
                         .filter(serviceDefinition -> !serviceDefinition.serviceClass().isAssignableFrom(serviceDefinition.providerClass()))
                         .map(ServiceDefinition::serviceClass)
@@ -447,8 +451,10 @@ public class RegistryBootstrap {
 
         /**
          * Internal class holding manually declared services to be appended to the service registry
-         * @param <S>
-         * @param <P>
+         * @param serviceClass  the service class
+         * @param providerClass the provider class
+         * @param <S>           The service class type
+         * @param <P>           The provider class type
          */
         public record ServiceDefinition<S extends Class<?>, P extends Class<?>>(S serviceClass, P providerClass) {
         }
