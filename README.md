@@ -698,7 +698,6 @@ it is responsible for holding a reference to the instance and returning it via `
 The `RegistryBoostrap` provides static methods for configuring and loading a `ServiceRegistry` instance. It is intended
 to be integrated into other libraries and applications as a mechanism for configuring a service registry instance.
 
-
 #### `RegistryBootstrap.Options`
 
 Stores all configuration options to be used to create a new `ServiceRegistry` instance. Using a bootstrap pattern
@@ -729,7 +728,8 @@ public static void main(String[] args) {
     	.appendService(MyService.class, MyServiceImpl.class) 
     	.serviceClassFilter(ClassFilters.implementsInterface(MyServiceBase.class))
     	.providerClassFilter(ClassFilters.hasServiceProviderAnnotation())
-    	.loadRegistry(false);
+    	.loadRegistry(false)
+        .build();
     );
 }
 ```

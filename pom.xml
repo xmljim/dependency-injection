@@ -6,20 +6,91 @@
 
     <groupId>io.github.xmljim.service</groupId>
     <artifactId>dependency-injection</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1</version>
 
     <properties>
+        <jacoco.maven.plugin.version>0.8.8</jacoco.maven.plugin.version>
+        <junit.version>5.10.0</junit.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.clean.plugin.version>3.3.1</maven.clean.plugin.version>
-        <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
-        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
+        <maven.deploy.plugin.version>3.1.1</maven.deploy.plugin.version>
+        <maven.gpg.plugin.version>3.1.0</maven.gpg.plugin.version>
         <maven.install.plugin.version>3.1.0</maven.install.plugin.version>
+        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
+        <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
+        <maven.resources.plugin.version>3.3.1</maven.resources.plugin.version>
+        <maven.site.plugin.version>3.12.1</maven.site.plugin.version>
+        <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
         <maven.surefire.plugin.version>3.1.2</maven.surefire.plugin.version>
-        <junit.version>5.10.0</junit.version>
+        <nexus.staging.maven.plugin.version>1.6.13</nexus.staging.maven.plugin.version>
+        <nexus.staging.serverId>ossrh</nexus.staging.serverId>
+        <nexus.staging.nexusUrl>https://s01.oss.sonatype.org/</nexus.staging.nexusUrl>
+        <nexus.staging.releaseAfterClose>true</nexus.staging.releaseAfterClose>
+        <nexus.staging.extensions>true</nexus.staging.extensions>
+        <nexus.staging.rules.bundle.element>BUNDLE</nexus.staging.rules.bundle.element>
+        <nexus.staging.rules.bundle.limit.counter>COMPLEXITY</nexus.staging.rules.bundle.limit.counter>
+        <nexus.staging.rules.bundle.limit.value>COVEREDRATIO</nexus.staging.rules.bundle.limit.value>
+        <nexus.staging.rules.bundle.limit.minimum>0.1</nexus.staging.rules.bundle.limit.minimum>
+        <spotbugs.maven.plugin.version>4.7.2.1</spotbugs.maven.plugin.version>
+        <spotbugs.dependency.version>4.7.3</spotbugs.dependency.version>
+        <versions.maven.plugin.version>2.16.0</versions.maven.plugin.version>
+        <!-- profiles: personal -->
+        <profiles.personal.repository.snapshots.enabled>true</profiles.personal.repository.snapshots.enabled>
+        <profiles.personal.repository.name>libs-release</profiles.personal.repository.name>
+        <profiles.personal.repository.id>maven-central</profiles.personal.repository.id>
+        <profiles.personal.repository.url>https://repo1.maven.org/maven2</profiles.personal.repository.url>
+        <!-- profiles: release -->
+        <profiles.release.distributionManagement.snapshot.id>ossrh</profiles.release.distributionManagement.snapshot.id>
+        <profiles.release.distributionManagement.snapshot.url>
+            https://s01.oss.sonatype.org/content/repositories/snapshots
+        </profiles.release.distributionManagement.snapshot.url>
+        <profiles.release.distributionManagement.repository.id>
+            ossrh
+        </profiles.release.distributionManagement.repository.id>
+        <profiles.release.distributionManagement.repository.url>
+            https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/
+        </profiles.release.distributionManagement.repository.url>
+        <!-- profiles: github -->
+        <profiles.github.distributionManagement.repository.id>
+            github
+        </profiles.github.distributionManagement.repository.id>
+        <profiles.github.distributionManagement.repository.name>
+            Github Packages
+        </profiles.github.distributionManagement.repository.name>
+        <profiles.github.distributionManagement.repository.url>
+            https://maven.pkg.github.com/xmljim/dependency-injection
+        </profiles.github.distributionManagement.repository.url>
+
     </properties>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A service library that supporting dependency injection</description>
+    <url>https://github.com/xmljim/dependency-injection</url>
+
+    <developers>
+        <developer>
+            <name>Jim Earley</name>
+            <email>xml.jim@gmail.com</email>
+            <organization>Self</organization>
+            <organizationUrl>https://github.com/xmmjim</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>https://github.com/xmljim/dependency-injection.git</connection>
+        <developerConnection>scm:git:ssh://github.com/xmljim/dependency-injection.git</developerConnection>
+        <url>https://github.com/xmljim/dependency-injection</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>Apache NON-AI License, Version 2.0</name>
+            <url>https://raw.githubusercontent.com/non-ai-licenses/non-ai-licenses/main/NON-AI-APACHE2</url>
+        </license>
+    </licenses>
 
     <dependencies>
         <dependency>
@@ -35,7 +106,7 @@
         <dependency>
             <groupId>com.github.spotbugs</groupId>
             <artifactId>spotbugs-annotations</artifactId>
-            <version>RELEASE</version>
+            <version>4.7.3</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
@@ -80,9 +151,67 @@
                     <artifactId>maven-install-plugin</artifactId>
                     <version>${maven.install.plugin.version}</version>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven.deploy.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>${maven.site.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven.source.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven.javadoc.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>${spotbugs.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>${versions.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.maven.plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>${maven.gpg.plugin.version}</version>
+                </plugin>
             </plugins>
         </pluginManagement>
+
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -91,11 +220,26 @@
                     <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
-
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <additionalOptions>
+                        <additionalOption>-Xdoclint:none</additionalOption>
+                    </additionalOptions>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven.surefire.plugin.version}</version>
                 <executions>
                     <execution>
                         <configuration>
@@ -114,7 +258,6 @@
             <plugin>
                 <groupId>com.github.spotbugs</groupId>
                 <artifactId>spotbugs-maven-plugin</artifactId>
-                <version>4.7.2.1</version>
                 <dependencies>
                     <!-- overwrite dependency on spotbugs if you want to specify the version of spotbugs -->
                     <dependency>
@@ -124,6 +267,135 @@
                     </dependency>
                 </dependencies>
             </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>${nexus.staging.maven.plugin.version}</version>
+                <extensions>${nexus.staging.extensions}</extensions>
+                <configuration>
+                    <serverId>${nexus.staging.serverId}</serverId>
+                    <nexusUrl>${nexus.staging.nexusUrl}</nexusUrl>
+                    <autoReleaseAfterClose>${nexus.staging.releaseAfterClose}</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <rules>
+                        <rule>
+                            <element>${nexus.staging.rules.bundle.element}</element>
+                            <limits>
+                                <limit>
+                                    <counter>${nexus.staging.rules.bundle.limit.counter}</counter>
+                                    <value>${nexus.staging.rules.bundle.limit.value}</value>
+                                    <minimum>${nexus.staging.rules.bundle.limit.minimum}</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                    </rules>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>personal</id>
+            <repositories>
+                <repository>
+                    <snapshots>
+                        <enabled>${profiles.personal.repository.snapshots.enabled}</enabled>
+                    </snapshots>
+                    <name>${profiles.personal.repository.name}</name>
+                    <id>${profiles.personal.repository.id}</id>
+                    <url>${profiles.personal.repository.url}</url>
+                </repository>
+            </repositories>
+        </profile>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>repo</name>
+                    <value>maven</value>
+                </property>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>sign-artifact</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>${profiles.release.distributionManagement.snapshot.id}</id>
+                    <url>${profiles.release.distributionManagement.snapshot.url}</url>
+                </snapshotRepository>
+                <repository>
+                    <id>${profiles.release.distributionManagement.repository.id}</id>
+                    <url>${profiles.release.distributionManagement.repository.url}</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>github</id>
+            <activation>
+                <property>
+                    <name>repo</name>
+                    <value>github</value>
+                </property>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>${profiles.github.distributionManagement.repository.id}</id>
+                    <name>${profiles.github.distributionManagement.repository.name}</name>
+                    <url>${profiles.github.distributionManagement.repository.url}</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 </project>
