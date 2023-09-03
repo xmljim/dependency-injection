@@ -5,7 +5,13 @@ and other kinds of dynamic applications that rely on available services at runti
 the ability to build services that have dependencies on other services. I want to create singleton services that can be 
 shared with other services at creation time. This library scratches these itches.
 
+[![License](https://img.shields.io/badge/License-Apache_2.0_Non_AI-blue.svg)](https://raw.githubusercontent.com/non-ai-licenses/non-ai-licenses/main/NON-AI-APACHE2)
+
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.xmljim.service/dependency-injection.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.xmljim.service%22%20AND%20a:%22dependency-injection%22)
+
+[![CodeQL](https://github.com/xmljim/dependency-injection/actions/workflows/codeql.yml/badge.svg)](https://github.com/xmljim/dependency-injection/actions/workflows/codeql.yml)
+
+[![Java CI with Maven](https://github.com/xmljim/dependency-injection/actions/workflows/maven.yml/badge.svg)](https://github.com/xmljim/dependency-injection/actions/workflows/maven.yml)
 
 ## Table of Contents
 <!-- TOC -->
