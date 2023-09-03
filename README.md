@@ -7,7 +7,7 @@ shared with other services at creation time. This library scratches these itches
 
 [![License](https://img.shields.io/badge/License-Apache_2.0_Non_AI-blue.svg)](https://raw.githubusercontent.com/non-ai-licenses/non-ai-licenses/main/NON-AI-APACHE2)
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.xmljim.service/dependency-injection.svg?label=Maven%20Central)](https://search.maven.org/search?q=g:%22io.github.xmljim.service%22%20AND%20a:%22dependency-injection%22)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.xmljim.service/dependency-injection.svg?label=Maven%20Central)](https://central.sonatype.com/search?q=io.github.xmljim&smo=true&namespace=io.github.xmljim.service&name=dependency-injection)
 
 [![CodeQL](https://github.com/xmljim/dependency-injection/actions/workflows/codeql.yml/badge.svg)](https://github.com/xmljim/dependency-injection/actions/workflows/codeql.yml)
 
