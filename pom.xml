@@ -33,7 +33,7 @@
         <nexus.staging.rules.bundle.element>BUNDLE</nexus.staging.rules.bundle.element>
         <nexus.staging.rules.bundle.limit.counter>COMPLEXITY</nexus.staging.rules.bundle.limit.counter>
         <nexus.staging.rules.bundle.limit.value>COVEREDRATIO</nexus.staging.rules.bundle.limit.value>
-        <nexus.staging.rules.bundle.limit.minimum>0.1</nexus.staging.rules.bundle.limit.minimum>
+        <nexus.staging.rules.bundle.limit.minimum>0.8</nexus.staging.rules.bundle.limit.minimum>
         <spotbugs.maven.plugin.version>4.7.2.1</spotbugs.maven.plugin.version>
         <spotbugs.dependency.version>4.7.3</spotbugs.dependency.version>
         <versions.maven.plugin.version>2.16.0</versions.maven.plugin.version>
@@ -75,12 +75,12 @@
             <name>Jim Earley</name>
             <email>xml.jim@gmail.com</email>
             <organization>Self</organization>
-            <organizationUrl>https://github.com/xmmjim</organizationUrl>
+            <organizationUrl>https://github.com/xmljim</organizationUrl>
         </developer>
     </developers>
 
     <scm>
-        <connection>https://github.com/xmljim/dependency-injection.git</connection>
+        <connection>scm:git:https://github.com/xmljim/dependency-injection.git</connection>
         <developerConnection>scm:git:ssh://github.com/xmljim/dependency-injection.git</developerConnection>
         <url>https://github.com/xmljim/dependency-injection</url>
     </scm>
