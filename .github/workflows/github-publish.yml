@@ -28,6 +28,6 @@ jobs:
       run: mvn -B package --file pom.xml -Pgithub
 
     - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy --batch-mode -Drepo=github --no-transfer-progress
+      run: mvn deploy --batch-mode -Pgithub -Drepo=github --no-transfer-progress
       env:
         GITHUB_TOKEN: ${{ github.token }}
