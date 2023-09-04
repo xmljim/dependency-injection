@@ -23,7 +23,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Default service implementation.
@@ -31,10 +34,14 @@ import java.util.Optional;
 class DefaultService extends Services {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultService.class);
 
+    private final Set<Provider> providers = new HashSet<>();
+
+    @SuppressWarnings("unused")
     public DefaultService(Class<?> serviceClass, ServiceRegistry serviceRegistry) {
         super(serviceClass, serviceRegistry);
     }
 
+    @SuppressWarnings("unused")
     public DefaultService(Class<?> serviceClass, ServiceRegistry serviceRegistry, boolean enforceAssignableFrom) {
         super(serviceClass, serviceRegistry, enforceAssignableFrom);
     }
@@ -57,5 +64,20 @@ class DefaultService extends Services {
         return provider;
     }
 
+    /**
+     * Return a stream of all providers
+     * @return The Provider stream
+     */
+    public Stream<Provider> getProviders() {
+        return providers.stream();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void appendProvider(Provider provider) {
+        providers.add(provider);
+    }
 
 }

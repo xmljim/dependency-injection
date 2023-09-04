@@ -2,9 +2,11 @@ package io.github.xmljim.service.di.testclasses;
 
 import io.github.xmljim.service.di.registry.ServiceRegistries;
 import io.github.xmljim.service.di.scanner.Scanner;
+import io.github.xmljim.service.di.service.Service;
 import io.github.xmljim.service.di.util.ClassFilter;
 
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Test registry for testing bootstrap options., not intended for use
@@ -53,5 +55,15 @@ public class TestServiceRegistryImpl extends ServiceRegistries {
     @Override
     public void reload(ClassFilter serviceFilter, ClassFilter providerFilter) {
 
+    }
+
+    @Override
+    public void appendService(Service service) {
+
+    }
+
+    @Override
+    public Stream<Service> services() {
+        return null;
     }
 }

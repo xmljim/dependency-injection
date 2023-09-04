@@ -23,11 +23,8 @@ import io.github.xmljim.service.di.registry.ServiceRegistry;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
 
 /**
  * Abstract Service class intended to be extended
@@ -38,7 +35,6 @@ public abstract class Services implements Service {
     private static Class<? extends Service> useService;
     private static final Class<? extends Service> DEFAULT = DefaultService.class;
     private final Class<?> serviceClass;
-    private final Set<Provider> providers = new HashSet<>();
     private final ServiceRegistry serviceRegistry;
     private boolean enforceAssignableFrom;
 
@@ -146,13 +142,6 @@ public abstract class Services implements Service {
         return getProviders().filter(provider -> provider.getName().equals(name)).findFirst();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void appendProvider(Provider provider) {
-        providers.add(provider);
-    }
 
     /**
      * {@inheritDoc}
@@ -170,13 +159,6 @@ public abstract class Services implements Service {
         enforceAssignableFrom = assignableFrom;
     }
 
-    /**
-     * Return a stream of all providers
-     * @return The Provider stream
-     */
-    public Stream<Provider> getProviders() {
-        return providers.stream();
-    }
 
     /**
      * {@inheritDoc}
@@ -193,7 +175,7 @@ public abstract class Services implements Service {
         if (o == null || getClass() != o.getClass()) return false;
         DefaultService service = (DefaultService) o;
         return Objects.equals(serviceClass, service.getServiceClass())
-            && Objects.equals(providers.stream(), service.getProviders())
+            && Objects.equals(getProviders(), service.getProviders())
             && Objects.equals(serviceRegistry, service.getServiceRegistry());
     }
 

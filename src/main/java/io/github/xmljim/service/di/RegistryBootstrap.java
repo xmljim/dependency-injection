@@ -351,7 +351,7 @@ public class RegistryBootstrap {
                         options.setServiceClassFilter(serviceClassFilter);
                     } else {
                         if (!options.getServiceClassFilter().get().equals(ClassFilters.DEFAULT)) {
-                            options.setServiceClassFilter(options.getProviderClassFilter().orElseThrow(() -> new RuntimeException("bad"))
+                            options.setServiceClassFilter(options.getServiceClassFilter().orElseThrow(() -> new RuntimeException("bad"))
                                 .or(serviceClassFilter));
                         }
                     }

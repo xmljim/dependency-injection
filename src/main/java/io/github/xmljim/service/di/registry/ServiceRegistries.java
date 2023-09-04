@@ -27,10 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Abstract ServiceRegistry implementation designed for extension. Also contains
@@ -43,7 +41,7 @@ public abstract class ServiceRegistries implements ServiceRegistry {
     private static Class<? extends ServiceRegistry> useServiceRegistry;
     private static ServiceRegistry instance;
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceRegistries.class);
-    private final Set<Service> serviceSet = new HashSet<>();
+    //private final Set<Service> serviceSet = new HashSet<>();
     private boolean enforceProviderAssignableFromService;
 
     /**
@@ -119,32 +117,6 @@ public abstract class ServiceRegistries implements ServiceRegistry {
         Services.setUseServiceClass(null);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void appendService(Service service) {
-        if (serviceSet.stream().noneMatch(s -> s.getServiceClass().equals(service.getServiceClass()))) {
-            LOGGER.debug("Service Added: {}", service);
-            serviceSet.add(service);
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Stream<Service> services() {
-        return serviceSet.stream();
-    }
-
-    /**
-     * Remove all stored service references
-     */
-    public void clearServices() {
-        LOGGER.debug("Clearing all services");
-        serviceSet.clear();
-    }
 
     /**
      * {@inheritDoc}

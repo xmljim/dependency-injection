@@ -20,13 +20,14 @@ import io.github.xmljim.service.di.ServiceManagerException;
 import io.github.xmljim.service.di.annotations.ServiceProvider;
 import io.github.xmljim.service.di.scanner.Scanner;
 import io.github.xmljim.service.di.scanner.Scanners;
+import io.github.xmljim.service.di.service.Service;
 import io.github.xmljim.service.di.util.ClassFilter;
 import io.github.xmljim.service.di.util.ServiceLifetime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Stream;
 
 /**
  * The default ServiceRegistry implementation
@@ -39,6 +40,11 @@ public class ServiceRegistryImpl extends ServiceRegistries {
     private final Map<String, Class<? extends Scanner>> scannerMap = new HashMap<>();
 
     private final Map<String, Boolean> scannerLoadStatus = new HashMap<>();
+
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
+    private final Set<Service> services = new HashSet<>();
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceRegistryImpl.class);
 
     /**
      * Constructor
@@ -104,6 +110,7 @@ public class ServiceRegistryImpl extends ServiceRegistries {
 
     @Override
     public <S extends Scanner> void appendScanner(String name, Class<S> scannerClass) {
+        LOGGER.debug("appending scanner: {} - {}", name, scannerClass);
         scannerMap.put(name, scannerClass);
     }
 
@@ -112,10 +119,36 @@ public class ServiceRegistryImpl extends ServiceRegistries {
      */
     @Override
     public synchronized void reload(ClassFilter serviceFilter, ClassFilter providerFilter) {
+        LOGGER.debug("reload services");
         loaded = false;
         clearServices();
         load(serviceFilter, providerFilter);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Stream<Service> services() {
+        return services.stream();
+    }
 
+    /**
+     * Remove all stored service references
+     */
+    public void clearServices() {
+        LOGGER.debug("Clearing all services");
+        services.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void appendService(Service service) {
+        if (services().noneMatch(s -> s.getServiceClass().equals(service.getServiceClass()))) {
+            LOGGER.debug("Service Added: {}", service);
+            services.add(service);
+        }
+    }
 }

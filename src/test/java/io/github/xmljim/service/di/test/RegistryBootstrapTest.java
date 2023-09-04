@@ -8,10 +8,7 @@ import io.github.xmljim.service.di.testclasses.*;
 import io.github.xmljim.service.di.util.ClassFilters;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class RegistryBootstrapTest {
 
@@ -99,6 +96,66 @@ class RegistryBootstrapTest {
             .orElseThrow());
 
         assertTrue(options.getServiceDefinitions().isEmpty());
+    }
+
+    @Test
+    void testMergeOptions() {
+        var serviceFilter = ClassFilters.implementsInterface(MyTestServices.class)
+            .or(ClassFilters.implementsInterface(ServiceRegistry.class));
+
+        var providerFilter = ClassFilters.hasServiceProviderAnnotation();
+
+
+        var options = RegistryBootstrap.Options.configure()
+            .enforceAssignability(true)
+            .loadRegistry(false)
+            .appendScanner("TEST", TestScanner.class)
+            .providerImplementation(TestProviderImpl.class)
+            .providerClassFilter(providerFilter)
+            .serviceImplementation(TestServiceImpl.class)
+            .serviceClassFilter(serviceFilter)
+            .serviceRegistryImplementation(TestServiceRegistryImpl.class)
+            .build();
+
+        var merged = RegistryBootstrap.Options.merge(options)
+            .serviceClassFilter(ClassFilters.DEFAULT)
+            .providerClassFilter(ClassFilters.DEFAULT)
+            .build();
+
+        assertEquals(ClassFilters.DEFAULT, merged.getProviderClassFilter().orElse(null));
+        assertEquals(ClassFilters.DEFAULT, merged.getServiceClassFilter().orElse(null));
+    }
+
+    @Test
+    void testMergeOptionsExtendClassFilters() {
+        var serviceFilter = ClassFilters.implementsInterface(MyTestServices.class);
+
+        var providerFilter = ClassFilters.hasServiceProviderAnnotation();
+
+
+        var options = RegistryBootstrap.Options.configure()
+            .enforceAssignability(true)
+            .loadRegistry(false)
+            .appendScanner("TEST", TestScanner.class)
+            .providerImplementation(TestProviderImpl.class)
+            .providerClassFilter(providerFilter)
+            .serviceImplementation(TestServiceImpl.class)
+            .serviceClassFilter(serviceFilter)
+            .serviceRegistryImplementation(TestServiceRegistryImpl.class)
+            .build();
+
+        var merged = RegistryBootstrap.Options.merge(options)
+            .serviceClassFilter(ClassFilters.implementsInterface(ServiceRegistry.class))
+            .providerClassFilter(ClassFilters.implementsInterface(ITeapotService.class))
+            .build();
+
+        var mergedClassFilter = serviceFilter.or(ClassFilters.implementsInterface(ServiceRegistry.class));
+        var mergedProviderFilter = providerFilter.or(ClassFilters.implementsInterface(ITeapotService.class));
+
+        assertNotEquals(serviceFilter, merged.getServiceClassFilter().orElse(null));
+        assertNotEquals(ClassFilters.DEFAULT, merged.getServiceClassFilter().orElse(null));
+        assertNotEquals(providerFilter, merged.getProviderClassFilter().orElse(null));
+        assertNotEquals(ClassFilters.DEFAULT, merged.getProviderClassFilter().orElse(null));
     }
 
     @Test
