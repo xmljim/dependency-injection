@@ -149,9 +149,6 @@ class RegistryBootstrapTest {
             .providerClassFilter(ClassFilters.implementsInterface(ITeapotService.class))
             .build();
 
-        var mergedClassFilter = serviceFilter.or(ClassFilters.implementsInterface(ServiceRegistry.class));
-        var mergedProviderFilter = providerFilter.or(ClassFilters.implementsInterface(ITeapotService.class));
-
         assertNotEquals(serviceFilter, merged.getServiceClassFilter().orElse(null));
         assertNotEquals(ClassFilters.DEFAULT, merged.getServiceClassFilter().orElse(null));
         assertNotEquals(providerFilter, merged.getProviderClassFilter().orElse(null));
